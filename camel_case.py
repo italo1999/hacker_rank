@@ -1,70 +1,91 @@
+class Operation:
+    STR = ""
+    action: str
+    value: str
 
-def camelCase(*, operation:str, type_operation: str, string: str):
-    if operation == "S" and type_operation == "M":
-        return SM(string)
-    
-    if operation == "C" and type_operation == "V":
-        return CV(string)
-    
-    if operation == "C" and type_operation == "C":
-        return CC(string)
-    
-    if operation == "S" and type_operation == "C":
-        return SC(string)
-    
-    if operation == "C" and type_operation == "M":
-        return CM(string)
-    
-    if operation == "S" and type_operation == "V":
-        return SV(string)
+    def __init__(self, action: str, value: str):
+        self.action = action
+        self.value = value
 
-def SV(string: str):
-    r = []
-    for e in string:
-        if e.isupper():
-            r.append(" ")
-        r.append(e.lower())
-    
-    return "".join(r).strip()
+    def trigger(self):
+        return getattr(self, self.action)()
 
-def CM(string: str):
-    r = [e.title() if l > 0 else e for l, e in enumerate(string.split(" "))]
-    
-    return "".join(r).__add__("()").strip()
+    def SM(self):
+        data = []
+        for layer, e in enumerate(self.value):
+            if e.istitle():
+                data.insert(layer, " ")
+                data.insert(layer+1, e.lower())
+            else:
+                data.append(e)
 
-def SC(string: str):
-    r=[]
-    
-    for  l, e in enumerate(string):
-        if l > 0 and e.isupper():
-            r.append(" ")
-        r.append(e.lower())
-        
-    return "".join(r)
+        return self.STR.join(data).replace("()", "")
 
+    def CV(self):
+        data = []
+        for layer, e in enumerate(self.value):
+            if layer > 1:
+                if self.value[layer-1] == " ":
+                    data.insert(layer, e.title())
+                else:
+                    data.append(e)
+            else:
+                data.append(e)
 
-def CC(string: str):
-    r = [e.title() for e in string.split(" ")]
-    
-    return "".join(r).replace(" ", "")
+        return self.STR.join(data).replace(" ", "")
 
-def CV(string:str):
-    r = [e.upper() if l> 1 and string[l-1] == " " else e for l, e in enumerate(string)]
-    
-    return "".join(r).replace(" ", "")
+    def CC(self):
+        data = []
+        for layer, e in enumerate(self.value):
+            if layer == 0:
+                data.append(e.title())
+            elif layer > 1 and self.value[layer-1] == " ":
+                data.append(e.title())
+            else:
+                data.append(e)
 
-def SM(string:str):
-    r = []
-    for e in string:
-        if not e.isupper(): r.append(e)
-        else: 
-            r.append(" ")
-            r.append(e.lower())
+        return self.STR.join(data).replace(" ", "")
 
-    return "".join(r).replace("()", "")
+    def SC(self):
+        data = []
+        for e in self.value:
+            if e.istitle():
+                data.append(" ")
+                data.append(e.lower())
+            else:
+                data.append(e)
 
+        return self.STR.join(data).strip()
+
+    def CM(self):
+        data = []
+        for layer, e in enumerate(self.value):
+            if layer > 0 and self.value[layer-1] == " ":
+                data.append(e.title())
+            else:
+                data.append(e)
+
+        data.append("()")
+
+        return self.STR.join(data).replace(" ", "")
+
+    def SV(self):
+        data = []
+        for e in self.value:
+            if e.istitle():
+                data.append(" ")
+                data.append(e.lower())
+            else:
+                data.append(e)
+
+        return self.STR.join(data)
 
 if __name__ == "__main__":
-    ar = input().split(";")
-    r = camelCase(operation=ar[0], type_operation=ar[1], string=ar[2])
-    print(r)
+    while True:
+        try:
+            op1, op2, value = input().rstrip().split(";")
+            op = Operation("".join([op1, op2]), value)
+
+            print(op.trigger())
+        except EOFError:
+            break
